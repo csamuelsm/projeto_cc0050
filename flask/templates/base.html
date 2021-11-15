@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html class='bg-gray-800 text-gray-200'>
+<head>
+    <title>
+        {{ title }}
+    </title>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
+</head>
+<style>
+    * {
+        font-family: 'Poppins'
+    }
+    /* width */
+    ::-webkit-scrollbar {
+    height: 5px;
+    width: 5px;
+    }
+
+    /* Track */
+    ::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    
+    }
+
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    width: 5px;
+    height: 5px;
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+    }
+</style>
+<body class='w-screen h-full p-8'>
+    {%block content%}
+    {%endblock%}
+</body>
+</html>
