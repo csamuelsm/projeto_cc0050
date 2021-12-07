@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{%block content%}
+
+<div class="container justify-content-center text-center px-3 my-3">
+     <h3>Você está lendo o mangá <b>{{manga}}</b></h3>
+     <h5>Volume {{volume}} - Capitulo {{capitulo}}: <b>{{titulo}}</b></h5>
+
+
+<div id="carouselExampleControls" class="carousel slide" data-bs-interval="false">
+    <div class="carousel-inner">
+      <div class="carousel-item active">
+        <img src="{{pages[0]}}" class="d-block col-lg-8 col-md-8 col-sm-8 w-100 shadow-sm">
+      </div>
+      {% for page in range(1, pages|length) %}
+        <div class='carousel-item'>
+            <img src="{{pages[page]}}" class="d-block col-lg-8 col-sm-8 w-100 shadow-sm">
+        </div>
+      {% endfor %}
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
+  </div>
+
+</div>
+
+
+
+{%endblock%}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{%block content%}
+<div class='container'>
+{% for i in range(manga_names|length) %}
+    <div class="card mx-3 my-3">
+        <div class="row d-flex align-items-center g-2">
+            <div class="col-md-3">
+                <img src="{{covers[i]}}" class="img-fluid rounded" alt="{{manga_names[i]}}">
+            </div>
+            <div class="col-md-9">
+                <div class="card-body">
+                <h3 class="card-title">{{manga_names[i]}}</h5>
+                {%for tag in tags[i]%}
+                    <span class="badge bg-secondary"><small>{{tag}}</small></span>
+                {%endfor%}
+                <p class="card-text">{{descriptions[i]}}</p>
+                <button type="button" class="btn btn-primary btn-lg align-middle"><ion-icon name="star-outline"></ion-icon> Adicionar aos favoritos</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+</div>
+<div class='container'>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Capítulo</th>
+                <th scope="col">Volume</th>
+                <th scope="col">Título do Capítulo</th>
+                <th scope="col">Língua</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in range(capitulos_id|length) %}
+                <tr>
+                    <th><a href='/capitulo/{{capitulos_id[i]}}'>{{capitulos_capitulo[i]}}</a></th>
+                    <td>{{capitulos_volume[i]}}</td>
+                    <td><a href='/capitulo/{{capitulos_id[i]}}'>{{capitulos_titulo[i]}}</a></td>
+                    <td>{{capitulos_lingua[i]}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{%endblock%}
