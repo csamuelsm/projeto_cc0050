@@ -7,12 +7,15 @@ RUN pip install semantic-version Pillow
 RUN pip install Flask-WTF
 RUN pip install wtforms[email]
 RUN pip install Flask-SQLAlchemy
+RUN pip install bootstrap-flask
 RUN pip install flask-security
 RUN pip install Flask-Migrate
 RUN pip install Flask-Reuploaded
-RUN pip install flask_session
 RUN apt-get update
+RUN pip install pyTelegramBotAPI
 RUN pip install semantic_version
-RUN pip install --upgrade MangaDex.py
+RUN pip install Flask-Session
+RUN pip install --upgrade wtforms==2.3.3
+RUN pip install Flask-JSON
 EXPOSE 80
 CMD python /flask/app.py
