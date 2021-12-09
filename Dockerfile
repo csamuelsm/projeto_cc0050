@@ -10,6 +10,7 @@ RUN pip install Flask-SQLAlchemy
 RUN pip install flask-security
 RUN pip install Flask-Migrate
 RUN pip install Flask-Reuploaded
+RUN pip install flask_session
 RUN apt-get update
 RUN pip install semantic_version
 RUN pip install --upgrade MangaDex.py

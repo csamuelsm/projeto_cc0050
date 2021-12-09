@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{%block content%}
+
+<form method='POST'>
+    <div class="container-fluid row justify-content-center text-center">
+        <h2>Cadastro</h2>
+            <div class="col-lg-6 col-md-8">
+                <div class="form-floating mb-3">
+                    <input type="user" class="form-control" id="floatingInput" name='user' placeholder="@user" required value="{{ request.form['user'] }}">
+                    <label for="floatingInput">Nome completo</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="user" class="form-control" id="floatingInput" name='user' placeholder="@user" required value="{{ request.form['user'] }}">
+                    <label for="floatingInput">Nome de usuário</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="password" class="form-control" id="floatingPassword" name='password' placeholder="Password" required>
+                    <label for="floatingPassword">Senha</label>
+                </div>
+                <button type="submit" class="btn btn-primary col-lg-3 col-md-4">Entrar</button>
+                <p class="lh-sm text-black-50"><small>Ainda não tem cadastro? <br/><a href='cadastrar'>Registre-se aqui!</a></small></p>
+            </div>
+    </div>
+    </form> 
+
+
+{%endblock%}
