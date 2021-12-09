@@ -1,10 +1,35 @@
 import flask
 from flask import Flask, render_template, request
+from flask import url_for, redirect, flash, make_response
+from waitress import serve
+from flask_wtf.csrf import CSRFProtect
+from flask_session import Session
+from flask import session
+from formUsuario import UsuarioForm
+from Usuarios import Usuario
 import requests
+import logging
+import hashlib
+import os
 import json
-#from waitress import serve
 
 app = Flask(__name__)
+CSRFProtect(app)
+CSV_DIR = '/flask/'
+
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SECRET_KEY'] = os.urandom(24)
+app.config['WTF_CSRF_SSL_STRICT'] = False
+Session(app)
+
+logging.basicConfig(filename=CSV_DIR + 'app.log', filemode='w', format='%(asctime)s %(name)s - %(levelname)s - %(message)s',level=logging.DEBUG)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + CSV_DIR + 'bd.sqlite3'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+from database import db
+db.init_app(app)
 
 base_url = 'https://api.mangadex.org/'
 uploads_url = 'https://uploads.mangadex.org/'
@@ -33,7 +58,7 @@ def root():
         user = request.form['user']
         password = request.form['password']
         if user == 'testing' and password == 'testing':
-            return flask.redirect('/mangas')
+            return redirect('/mangas')
     return render_template('index.html')
 
 @app.route('/mangas', methods=('GET', 'POST'))
@@ -184,5 +209,22 @@ def capitulo(id):
 
     return render_template('chapter.html', pages=pages, manga=manga, capitulo=capitulo, volume=volume, titulo=titulo)
 
+@app.route('/cadastrar', methods=['POST','GET'])
+def cadastrar():
+    form = UsuarioForm()
+    if form.validate_on_submit():
+        #PROCESSAMENTO DOS DADOS RECEBIDOS
+        nome = request.form['nome']
+        username = request.form['username']
+        email = request.form['email']
+        senha = request.form['senha']
+        senhahash = hashlib.sha1(senha.encode('utf8')).hexdigest()
+        novoUsuario = Usuario(nome=nome,username=username,email=email,senha=senhahash)
+        db.session.add(novoUsuario)
+        db.session.commit()
+        flash(u'Usuário cadastrado com sucesso!')
+        return(redirect(url_for('root')))
+    return (render_template('cadastro.html',form=form,action=url_for('cadastrar')))
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    serve(app, host='0.0.0.0', port=80, url_prefix='/app')
