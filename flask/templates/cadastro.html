@@ -2,24 +2,28 @@
 
 {%block content%}
 
-<form method='POST'>
+<form action="" method='POST' novalidate>
+    {{ form.csrf_token }}
     <div class="container-fluid row justify-content-center text-center">
         <h2>Cadastro</h2>
             <div class="col-lg-6 col-md-8">
                 <div class="form-floating mb-3">
-                    <input type="user" class="form-control" id="floatingInput" name='user' placeholder="@user" required value="{{ request.form['user'] }}">
-                    <label for="floatingInput">Nome completo</label>
+                    {{ form.nome(type="text", class="form-control", id="floatingInput", placeholder="Nome Completo da Silva") }}
+                    {{ form.nome.label(for="floatingInput") }}
                 </div>
                 <div class="form-floating mb-3">
-                    <input type="user" class="form-control" id="floatingInput" name='user' placeholder="@user" required value="{{ request.form['user'] }}">
-                    <label for="floatingInput">Nome de usuário</label>
+                    {{ form.username(type="user", class="form-control", id="floatingInput", placeholder="@user") }}
+                    {{ form.username.label(for="floatingInput") }}
                 </div>
                 <div class="form-floating mb-3">
-                    <input type="password" class="form-control" id="floatingPassword" name='password' placeholder="Password" required>
-                    <label for="floatingPassword">Senha</label>
+                    {{ form.email(type="email", class="form-control", id="floatingInput", placeholder="seu.email@gmail.com") }}
+                    {{ form.email.label(for="floatingInput") }}
                 </div>
-                <button type="submit" class="btn btn-primary col-lg-3 col-md-4">Entrar</button>
-                <p class="lh-sm text-black-50"><small>Ainda não tem cadastro? <br/><a href='cadastrar'>Registre-se aqui!</a></small></p>
+                <div class="form-floating mb-3">
+                    {{ form.senha(type="password", class="form-control", id="floatingPassword", placeholder="Password") }}
+                    {{ form.senha.label(for="floatingPassword") }}
+                </div>
+                {{ form.enviar(type="submit", class="btn btn-primary col-lg-3 col-md-4") }}
             </div>
     </div>
     </form> 
