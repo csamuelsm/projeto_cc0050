@@ -6,6 +6,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_session import Session
 from flask import session
 from formUsuario import UsuarioForm
+from formLogin import LoginForm
 from Usuarios import Usuario
 import requests
 import logging
@@ -34,6 +35,11 @@ db.init_app(app)
 base_url = 'https://api.mangadex.org/'
 uploads_url = 'https://uploads.mangadex.org/'
 
+@app.before_first_request
+def inicializar_bd():
+    #db.drop_all()
+    db.create_all()
+
 def emoji_lingua(lingua):
     if lingua == 'pt-br':
         return '🇧🇷'
@@ -54,12 +60,17 @@ def emoji_lingua(lingua):
 
 @app.route('/', methods=('GET', 'POST'))
 def root():
-    if request.method == 'POST':     
-        user = request.form['user']
-        password = request.form['password']
-        if user == 'testing' and password == 'testing':
-            return redirect('/mangas')
-    return render_template('index.html')
+    form = LoginForm()
+    if form.validate_on_submit():     
+        user = request.form['username']
+        password = request.form['senha']
+        passwordhash = hashlib.sha1(password.encode('utf8')).hexdigest()
+        linha = Usuario.query.filter(Usuario.username==user,Usuario.senha==passwordhash).all()
+        if (len(linha)>0):
+            return redirect(url_for("manga"))
+        else:
+            flash(u'Usuário e/ou senha não conferem!')
+    return render_template('index.html', form = form,action=url_for('root'))
 
 @app.route('/mangas', methods=('GET', 'POST'))
 def manga():
@@ -214,17 +225,17 @@ def cadastrar():
     form = UsuarioForm()
     if form.validate_on_submit():
         #PROCESSAMENTO DOS DADOS RECEBIDOS
-        nome = request.form['nome']
+        name = request.form['nome']
         username = request.form['username']
         email = request.form['email']
-        senha = request.form['senha']
-        senhahash = hashlib.sha1(senha.encode('utf8')).hexdigest()
-        novoUsuario = Usuario(nome=nome,username=username,email=email,senha=senhahash)
+        password = request.form['senha']
+        passwordhash = hashlib.sha1(password.encode('utf8')).hexdigest()
+        novoUsuario = Usuario(nome=name,username=username,email=email,senha=passwordhash)
         db.session.add(novoUsuario)
         db.session.commit()
         flash(u'Usuário cadastrado com sucesso!')
         return(redirect(url_for('root')))
-    return (render_template('cadastro.html',form=form,action=url_for('cadastrar')))
+    return (render_template('cadastro.html', form=form, action=url_for('cadastrar')))
 
 if __name__ == "__main__":
     serve(app, host='0.0.0.0', port=80, url_prefix='/app')
