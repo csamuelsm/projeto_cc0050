@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'baseLogOut.html' if session.autenticado == True else 'baseLogIn.html' %}
 
 {%block content%}
 <div class="container">
@@ -8,6 +8,8 @@
         <hr>
         <p class="mt-0 mb-0"><small>Caso queira pular esta parte e ir direto para os mangás, <a href="mangas">clique aqui!</a></small></p>
     </div>
+
+    {% if session.autenticado != True %}
 
     <form action="" method='POST' novalidate>
         {{ form.csrf_token }}
@@ -27,5 +29,14 @@
             </div>
     </div>
     </form> 
+
+    {% else %}
+
+    <div class="container-fluid row justify-content-center text-center">
+        <h3> Você já está autenticado! :) </h3>
+    </div>
+
+    {% endif %}
+
 </div>
 {%endblock%}

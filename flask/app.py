@@ -8,6 +8,8 @@ from flask import session
 from formUsuario import UsuarioForm
 from formLogin import LoginForm
 from Usuarios import Usuario
+from Mangas import Manga
+from Favorito import Favorito
 import requests
 import logging
 import hashlib
@@ -67,10 +69,17 @@ def root():
         passwordhash = hashlib.sha1(password.encode('utf8')).hexdigest()
         linha = Usuario.query.filter(Usuario.username==user,Usuario.senha==passwordhash).all()
         if (len(linha)>0):
+            session['autenticado'] = True
+            session['usuario'] = linha[0].id
             return redirect(url_for("manga"))
         else:
             flash(u'Usuário e/ou senha não conferem!')
-    return render_template('index.html', form = form,action=url_for('root'))
+    return render_template('index.html', form = form, session=session, action=url_for('root'))
+
+@app.route('/logout',methods=['POST','GET'])
+def logout():
+    session.clear()
+    return(redirect(url_for('root')))
 
 @app.route('/mangas', methods=('GET', 'POST'))
 def manga():
@@ -187,7 +196,7 @@ def get_manga(id):
         chapter = capitulo['attributes']['chapter']
         capitulos_capitulo.append(chapter)
 
-    return render_template('manga.html', manga_names=manga_names, covers=manga_covers, tags=manga_tags, descriptions=manga_descriptions, ids=manga_ids,
+    return render_template('manga.html', session=session, manga_names=manga_names, covers=manga_covers, tags=manga_tags, descriptions=manga_descriptions, ids=manga_ids,
                             capitulos_id = capitulos_id, capitulos_titulo=capitulos_titulo, capitulos_lingua=capitulos_lingua,
                             capitulos_volume=capitulos_volume, capitulos_capitulo=capitulos_capitulo)
 
@@ -218,7 +227,7 @@ def capitulo(id):
     for img in chapters_img_hash:
         pages.append(uploadsUrl+'/data/'+hash+'/'+img)
 
-    return render_template('chapter.html', pages=pages, manga=manga, capitulo=capitulo, volume=volume, titulo=titulo)
+    return render_template('chapter.html', session=session, pages=pages, manga=manga, capitulo=capitulo, volume=volume, titulo=titulo)
 
 @app.route('/cadastrar', methods=['POST','GET'])
 def cadastrar():
@@ -235,7 +244,11 @@ def cadastrar():
         db.session.commit()
         flash(u'Usuário cadastrado com sucesso!')
         return(redirect(url_for('root')))
-    return (render_template('cadastro.html', form=form, action=url_for('cadastrar')))
+    return (render_template('cadastro.html', form=form, session=session, action=url_for('cadastrar')))
+
+'''
+@app.route('/manga/<id>/favoritar')
+'''
 
 if __name__ == "__main__":
     serve(app, host='0.0.0.0', port=80, url_prefix='/app')

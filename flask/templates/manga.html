@@ -1,5 +1,4 @@
-{% extends 'base.html' %}
-
+{% extends 'baseLogOut.html' if session.autenticado == True else 'baseLogIn.html' %}
 {%block content%}
 <div class='container'>
 {% for i in range(manga_names|length) %}
