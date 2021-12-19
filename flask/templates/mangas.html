@@ -17,7 +17,7 @@
 </div>
 
 <div class="container-fluid row justify-content-center mt-3 text-center">
-    <h2>Recentemente Atualizados</h2>
+    <h2> {{ title }} </h2>
     {% for i in range(manga_names|length) %}
         <div class="card mx-2 my-2" style="width: 13rem; height: 100%;">
             <a href='manga/{{ids[i]}}'><img src="{{covers[i]}}" class="card-img-top rounded shadow-sm" alt="{{manga_names[i]}}"></a>

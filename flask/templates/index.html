@@ -6,10 +6,11 @@
         <h4 class="alert-heading">Bem vindo ao <b>Leitor de Mangá</b>!</h4>
         <p>Aqui você encontrará mangás de todos os tipos e em várias linguas. Para poder ter uma melhor experiência, faça seu login abaixo!</p>
         <hr>
+
+        {% if session.autenticado != True %}
+
         <p class="mt-0 mb-0"><small>Caso queira pular esta parte e ir direto para os mangás, <a href="mangas">clique aqui!</a></small></p>
     </div>
-
-    {% if session.autenticado != True %}
 
     <form action="" method='POST' novalidate>
         {{ form.csrf_token }}
@@ -32,11 +33,14 @@
 
     {% else %}
 
+    <p class="mt-0 mb-0"><small><a href="mangas">Clique aqui</a> para ver todos os mangás.</small></p>
+    </div>
+
     <div class="container">
         <div class="alert alert-success mt-2 text-center" role="alert">
             <h4 class="alert-heading">Você já está autenticado! :)</h4>
             <hr>
-            <p class="mt-0 mb-0"><small><a href="mangas">Clique aqui</a> para ver seus mangás favoritos.</small></p>
+            <p class="mt-0 mb-0"><small><a href="/favoritos">Clique aqui</a> para ver seus mangás favoritos.</small></p>
         </div>
 
     {% endif %}

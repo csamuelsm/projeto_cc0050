@@ -38,9 +38,10 @@ base_url = 'https://api.mangadex.org/'
 uploads_url = 'https://uploads.mangadex.org/'
 
 @app.before_first_request
-def inicializar_bd():
+def inicializar():
     #db.drop_all()
     db.create_all()
+    session['autenticado'] = False
 
 def emoji_lingua(lingua):
     if lingua == 'pt-br':
@@ -60,35 +61,7 @@ def emoji_lingua(lingua):
     else:
         return lingua
 
-@app.route('/', methods=('GET', 'POST'))
-def root():
-    form = LoginForm()
-    if form.validate_on_submit():     
-        user = request.form['username']
-        password = request.form['senha']
-        passwordhash = hashlib.sha1(password.encode('utf8')).hexdigest()
-        linha = Usuario.query.filter(Usuario.username==user,Usuario.senha==passwordhash).all()
-        if (len(linha)>0):
-            session['autenticado'] = True
-            session['usuario'] = linha[0].id
-            flash(u'Usuário autenticado com sucesso!')
-            return redirect(url_for("manga"))
-        else:
-            flash(u'Usuário e/ou senha não conferem!')
-    return render_template('index.html', form = form, session=session, action=url_for('root'))
-
-@app.route('/logout',methods=['POST','GET'])
-def logout():
-    session.clear()
-    return(redirect(url_for('root')))
-
-@app.route('/mangas', methods=('GET', 'POST'))
-def manga():
-    recents_payload = {
-        'publicationDemographic[]': ['shounen'],
-        }
-    recents = requests.get(base_url+'manga', params=recents_payload)
-    manga_data = recents.json()['data']
+def get_manga_info(manga_data):
     manga_names = []
     manga_covers = []
     manga_tags = []
@@ -128,7 +101,41 @@ def manga():
     for i in range(len(manga_names)):
         if len(manga_names[i]) >= 35:
             manga_names[i] = manga_names[i][:35] + '...'
-    return render_template('mangas.html', manga_names=manga_names, covers=manga_covers, tags=manga_tags, descriptions=manga_descriptions, ids=manga_ids)
+    return (manga_names, manga_covers, manga_tags, manga_descriptions, manga_ids)
+
+@app.route('/', methods=('GET', 'POST'))
+def root():
+    form = LoginForm()
+    if form.validate_on_submit():     
+        user = request.form['username']
+        password = request.form['senha']
+        passwordhash = hashlib.sha1(password.encode('utf8')).hexdigest()
+        linha = Usuario.query.filter(Usuario.username==user,Usuario.senha==passwordhash).all()
+        if (len(linha)>0):
+            session['autenticado'] = True
+            session['usuario'] = linha[0].id
+            flash(u'Usuário autenticado com sucesso!')
+            return redirect(url_for("manga"))
+        else:
+            flash(u'Usuário e/ou senha não conferem!')
+    return render_template('index.html', form = form, session=session, action=url_for('root'))
+
+@app.route('/logout',methods=['POST','GET'])
+def logout():
+    session.clear()
+    return(redirect(url_for('root')))
+
+@app.route('/mangas', methods=('GET', 'POST'))
+def manga():
+    recents_payload = {
+        'publicationDemographic[]': ['shounen'],
+        }
+    recents = requests.get(base_url+'manga', params=recents_payload)
+    manga_data = recents.json()['data']
+
+    manga_info = get_manga_info(manga_data)
+    
+    return render_template('mangas.html', title = "Recentemente Atualizados", manga_names=manga_info[0], covers=manga_info[1], tags=manga_info[2], descriptions=manga_info[3], ids=manga_info[4])
 
 @app.route('/manga/<id>')
 def get_manga(id):
@@ -137,39 +144,8 @@ def get_manga(id):
         }
     recents = requests.get(base_url+'manga', params=recents_payload)
     manga_data = recents.json()['data']
-    manga_names = []
-    manga_covers = []
-    manga_tags = []
-    manga_descriptions=[]
-    manga_ids = []
-    for manga in manga_data:
-        desc = None
-        manga_names.append(manga['attributes']['title'][next(iter(manga['attributes']['title']))])
-        manga_descs = manga['attributes']['description']
-        if 'pt' in manga_descs:
-            desc = manga_descs['pt']
-        else:
-            desc = manga_descs[next(iter(manga_descs))]
-        manga_descriptions.append(desc)
-        manga_id = manga['id']
-        manga_ids.append(manga_id)
-        rel = manga['relationships']
-        cover_id = None
-        tags = []
-        for r in rel:
-            if r['type'] == 'cover_art':
-                cover_id = r['id']
 
-        for t in manga['attributes']['tags']:
-            tags.append(t['attributes']['name']['en'])
-
-        manga_tags.append(tags)
-        
-        if cover_id != None:
-            cover = requests.get(f'{base_url}cover/{cover_id}')
-            cover_data = cover.json()['data']['attributes']['fileName']
-            cover256 = f'{uploads_url}covers/{manga_id}/{cover_data}.256.jpg'
-            manga_covers.append(cover256)
+    manga_info = get_manga_info(manga_data)
 
     '''
     parte em que pego os capitulos abaixo
@@ -197,7 +173,14 @@ def get_manga(id):
         chapter = capitulo['attributes']['chapter']
         capitulos_capitulo.append(chapter)
 
-    return render_template('manga.html', session=session, manga_names=manga_names, covers=manga_covers, tags=manga_tags, descriptions=manga_descriptions, ids=manga_ids,
+    # Verificar se o usuário já adicionou esse mangá aos favoritos
+    favoritado = False
+    if session['autenticado'] == True:
+        consultaFavorito = Favorito.query.filter(Favorito.id_usuario == session['usuario'], Favorito.id_manga == id).all()
+        if (len(consultaFavorito)>0):
+            favoritado = True
+
+    return render_template('manga.html', session=session, favoritado=favoritado, manga_names=manga_info[0], covers=manga_info[1], tags=manga_info[2], descriptions=manga_info[3], ids=manga_info[4],
                             capitulos_id = capitulos_id, capitulos_titulo=capitulos_titulo, capitulos_lingua=capitulos_lingua,
                             capitulos_volume=capitulos_volume, capitulos_capitulo=capitulos_capitulo)
 
@@ -253,18 +236,61 @@ def cadastrar():
 
 @app.route('/favoritar/<id>')
 def favoritar(id):
-    # Verificando se o mangá já está no banco de dados
-    linha = Manga.query.filter(Manga.id == id).all()
-    if (not linha):
-        # SALVANDO O MANGA NO BANCO DE DADOS
-        novoManga = Manga(id=id)
-        db.session.add(novoManga)
-    # Criando a relação
-    novoFavorito = Favorito(id_usuario=session['usuario'], id_manga=id)
-    db.session.add(novoFavorito)
-    db.session.commit()
-    flash(u'Adicionado aos favoritos!')
+    # Verificar se o usuário está autenticado
+    if session['autenticado'] != True:
+        flash(u'Você não está autenticado! Faça login para salvar seus mangás favoritos :)')
+    else:
+        # Verificando se o mangá já está no banco de dados
+        consultaManga = Manga.query.filter(Manga.id == id).all()
+        if (not consultaManga):
+            # SALVANDO O MANGA NO BANCO DE DADOS
+            novoManga = Manga(id=id)
+            db.session.add(novoManga)
+        # Criando a relação
+        novoFavorito = Favorito(id_usuario=session['usuario'], id_manga=id)
+        db.session.add(novoFavorito)
+        db.session.commit()
+        flash(u'Adicionado aos favoritos!')
     return redirect(url_for("get_manga", id=id))
+
+@app.route('/desfavoritar/<id>')
+def desfavoritar(id):
+    try:
+        consultaFavorito = Favorito.query.filter(Favorito.id_usuario == session['usuario'], Favorito.id_manga == id).all()
+        db.session.delete(consultaFavorito[0])
+        db.session.commit()
+        flash(u'Removido com sucesso!')
+    except:
+        flash(u'Tivemos um problema com o banco de dados! Tente novamente.')
+    return redirect(url_for("get_manga", id=id))
+
+@app.route('/favoritos')
+def favoritos():
+    try:
+        consultaFavoritos = Favorito.query.filter(Favorito.id_usuario == session['usuario']).all()
+    except:
+        flash(u'Tivemos um problema com o banco de dados! Tente novamente.')
+    
+    if (len(consultaFavoritos)>0):
+        ids = []
+        for favorito in consultaFavoritos:
+            ids.append(favorito.id_manga)
+
+        recents_payload = {
+            'ids[]': [ids],
+            }
+        
+        favoritos = requests.get(base_url+'manga', params=recents_payload)
+        manga_data = favoritos.json()['data']
+
+        manga_info = get_manga_info(manga_data)
+
+        return render_template('mangas.html', title = "Seus Favoritos", manga_names=manga_info[0], covers=manga_info[1], tags=manga_info[2], descriptions=manga_info[3], ids=manga_info[4])
+    
+    else:
+        flash(u'Você não possui favoritos no momento!')
+        return redirect(url_for("manga"))
+
 
 if __name__ == "__main__":
     serve(app, host='0.0.0.0', port=80, url_prefix='/app')
