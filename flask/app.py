@@ -71,6 +71,7 @@ def root():
         if (len(linha)>0):
             session['autenticado'] = True
             session['usuario'] = linha[0].id
+            flash(u'Usuário autenticado com sucesso!')
             return redirect(url_for("manga"))
         else:
             flash(u'Usuário e/ou senha não conferem!')
@@ -240,15 +241,30 @@ def cadastrar():
         password = request.form['senha']
         passwordhash = hashlib.sha1(password.encode('utf8')).hexdigest()
         novoUsuario = Usuario(nome=name,username=username,email=email,senha=passwordhash)
-        db.session.add(novoUsuario)
-        db.session.commit()
-        flash(u'Usuário cadastrado com sucesso!')
+        try:
+            db.session.add(novoUsuario)
+            db.session.commit()
+            flash(u'Usuário cadastrado com sucesso!')
+        except:
+            flash(u'Tivemos um problema com o banco de dados! Tente novamente.')
         return(redirect(url_for('root')))
     return (render_template('cadastro.html', form=form, session=session, action=url_for('cadastrar')))
 
-'''
-@app.route('/manga/<id>/favoritar')
-'''
+
+@app.route('/favoritar/<id>')
+def favoritar(id):
+    # Verificando se o mangá já está no banco de dados
+    linha = Manga.query.filter(Manga.id == id).all()
+    if (not linha):
+        # SALVANDO O MANGA NO BANCO DE DADOS
+        novoManga = Manga(id=id)
+        db.session.add(novoManga)
+    # Criando a relação
+    novoFavorito = Favorito(id_usuario=session['usuario'], id_manga=id)
+    db.session.add(novoFavorito)
+    db.session.commit()
+    flash(u'Adicionado aos favoritos!')
+    return redirect(url_for("get_manga", id=id))
 
 if __name__ == "__main__":
     serve(app, host='0.0.0.0', port=80, url_prefix='/app')

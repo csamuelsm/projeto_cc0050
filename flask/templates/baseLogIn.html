@@ -32,6 +32,18 @@
             </div>
         </div>
     </nav>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      
+      {% for message in messages %}
+        <div class="alert alert-danger" role="alert">
+          {{message}}
+        </div>
+      {% endfor %}
+      
+    {% endif %}
+    {% endwith %}
+
     {%block content%}
     {%endblock%}
     <nav class="navbar sticky-bottom navbar-light bg-light">

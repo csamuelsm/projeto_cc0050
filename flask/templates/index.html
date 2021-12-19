@@ -32,9 +32,12 @@
 
     {% else %}
 
-    <div class="container-fluid row justify-content-center text-center">
-        <h3> Você já está autenticado! :) </h3>
-    </div>
+    <div class="container">
+        <div class="alert alert-success mt-2 text-center" role="alert">
+            <h4 class="alert-heading">Você já está autenticado! :)</h4>
+            <hr>
+            <p class="mt-0 mb-0"><small><a href="mangas">Clique aqui</a> para ver seus mangás favoritos.</small></p>
+        </div>
 
     {% endif %}
 
