@@ -41,7 +41,6 @@ uploads_url = 'https://uploads.mangadex.org/'
 def inicializar():
     #db.drop_all()
     db.create_all()
-    session['autenticado'] = False
 
 def emoji_lingua(lingua):
     if lingua == 'pt-br':
@@ -175,7 +174,7 @@ def get_manga(id):
 
     # Verificar se o usuário já adicionou esse mangá aos favoritos
     favoritado = False
-    if session['autenticado'] == True:
+    if session.get('autenticado', False) == True:
         consultaFavorito = Favorito.query.filter(Favorito.id_usuario == session['usuario'], Favorito.id_manga == id).all()
         if (len(consultaFavorito)>0):
             favoritado = True
@@ -237,7 +236,7 @@ def cadastrar():
 @app.route('/favoritar/<id>')
 def favoritar(id):
     # Verificar se o usuário está autenticado
-    if session['autenticado'] != True:
+    if session.get('autenticado', False) == False:
         flash(u'Você não está autenticado! Faça login para salvar seus mangás favoritos :)')
     else:
         # Verificando se o mangá já está no banco de dados

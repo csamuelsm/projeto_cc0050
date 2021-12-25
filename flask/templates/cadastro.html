@@ -1,4 +1,4 @@
-{% extends 'baseLogOut.html' if session.autenticado == True else 'baseLogIn.html' %}
+{% extends 'baseLogOut.html' if session.get('autenticado', False) == True else 'baseLogIn.html' %}
 
 {%block content%}
 
