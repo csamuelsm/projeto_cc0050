@@ -7,6 +7,7 @@ from flask_session import Session
 from flask import session
 from formUsuario import UsuarioForm
 from formLogin import LoginForm
+from formPesquisa import PesquisaForm
 from Usuarios import Usuario
 from Mangas import Manga
 from Favorito import Favorito
@@ -36,6 +37,7 @@ db.init_app(app)
 
 base_url = 'https://api.mangadex.org/'
 uploads_url = 'https://uploads.mangadex.org/'
+
 
 @app.before_first_request
 def inicializar():
@@ -126,15 +128,32 @@ def logout():
 
 @app.route('/mangas', methods=('GET', 'POST'))
 def manga():
-    recents_payload = {
-        'publicationDemographic[]': ['shounen'],
+
+    form = PesquisaForm()
+
+    if form.validate_on_submit():
+        pesquisa = request.form['pesquisa']
+        
+        recents_payload = {
+            'title': pesquisa,
         }
+        recents = requests.get(base_url+'manga', params=recents_payload)
+        manga_data = recents.json()['data']
+        manga_info = get_manga_info(manga_data)
+        return render_template('mangas.html', form=form, title = "Pesquisa: {}".format(pesquisa), manga_names=manga_info[0], covers=manga_info[1], tags=manga_info[2], descriptions=manga_info[3], ids=manga_info[4])
+
+
+    recents_payload = {
+        'publicationDemographic[]': ['shounen', 'shoujo', 'seinen', 'josei'],
+        'contentRating[]': ['safe']
+        }
+        
     recents = requests.get(base_url+'manga', params=recents_payload)
     manga_data = recents.json()['data']
 
     manga_info = get_manga_info(manga_data)
     
-    return render_template('mangas.html', title = "Recentemente Atualizados", manga_names=manga_info[0], covers=manga_info[1], tags=manga_info[2], descriptions=manga_info[3], ids=manga_info[4])
+    return render_template('mangas.html', form=form, title = "Recentemente Atualizados", manga_names=manga_info[0], covers=manga_info[1], tags=manga_info[2], descriptions=manga_info[3], ids=manga_info[4])
 
 @app.route('/manga/<id>')
 def get_manga(id):
@@ -251,6 +270,13 @@ def favoritar(id):
         db.session.commit()
         flash(u'Adicionado aos favoritos!')
     return redirect(url_for("get_manga", id=id))
+
+'''@app.route('/pesquisar', methods=['POST'])
+def pesquisar():
+    form = PesquisaForm()
+    #pesquisa = request.form['pesquisa']
+    return render_template('mangas.html', form=form, title = "Pesquisa", manga_names=[], covers=[], tags=[], descriptions=[], ids=[])'''
+
 
 @app.route('/desfavoritar/<id>')
 def desfavoritar(id):
