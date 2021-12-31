@@ -41,6 +41,7 @@ uploads_url = 'https://uploads.mangadex.org/'
 
 @app.before_first_request
 def inicializar():
+    session.clear()
     #db.drop_all()
     db.create_all()
 
@@ -310,7 +311,7 @@ def favoritos():
 
         manga_info = get_manga_info(manga_data)
 
-        return render_template('mangas.html', title = "Seus Favoritos", manga_names=manga_info[0], covers=manga_info[1], tags=manga_info[2], descriptions=manga_info[3], ids=manga_info[4])
+        return render_template('mangas.html', form = False, title = "Seus Favoritos", manga_names=manga_info[0], covers=manga_info[1], tags=manga_info[2], descriptions=manga_info[3], ids=manga_info[4])
     
     else:
         flash(u'Você não possui favoritos no momento!')
